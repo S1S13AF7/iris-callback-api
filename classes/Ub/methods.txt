@@ -5,7 +5,9 @@ addUser						Ub.Callback.AddUser
 bindChat					Ub.Callback.Bind
 subscribeSignals			Ub.Callback.Bind
 deleteMessages				Ub.Callback.DeleteMessages
+deleteMessagesFromUser			Ub.Callback.DeleteFromUser
 printBookmark				Ub.Callback.PrintBookmark
 forbiddenLinks				Ub.Callback.ForbiddenLinks
+sendMySignal					Ub.Callback.SendMySignal
 sendSignal					Ub.Callback.SendSignal
 hireApi						Ub.Callback.HireApi

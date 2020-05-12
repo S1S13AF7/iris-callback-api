@@ -1,5 +1,5 @@
 <?php
-class UbCallbackSendSignal implements UbCallbackAction {
+class UbCallbackSendMySignal implements UbCallbackAction {
 
 	function closeConnection() {
 		@ob_end_clean();
@@ -23,8 +23,7 @@ class UbCallbackSendSignal implements UbCallbackAction {
 		self::closeConnection();
 
 		$vk = new UbVkApi($userbot['token']);
-		$in = $object['value']; // сам сигнал
-		$id = $object['from_id']; // от кого
+		$in = $object['value']; // наш сигнал
 		$time = $vk->getTime(); // ServerTime
 
 		if ($in == 'ping' || $in == 'пинг'  || $in == 'пінг'  || $in == 'пінґ') {
@@ -32,7 +31,7 @@ class UbCallbackSendSignal implements UbCallbackAction {
 				return;
 		}
 
-		$vk->chatMessage($chatId, 'Мне прислали сигнал. От пользователя @id' . $object['from_id'], ['disable_mentions' => 1]);
+		$vk->chatMessage($chatId, UB_ICON_WARN . ' ФУНКЦИОНАЛ НЕ РЕАЛИЗОВАН');
 	}
 
 }

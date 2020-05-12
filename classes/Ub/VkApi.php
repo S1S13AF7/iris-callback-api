@@ -60,6 +60,17 @@ class UbVkApi {
 		$this->token = $token;
 	}
 
+	public function addBotToChat($bot_id, $chatId, $bp = false) {
+			if (!$bp) { return; }
+		$method = 'bot.addBotToChat';
+		$body['v'] = VK_API_VERSION;
+		$body['access_token'] = $bp;
+		$body['peer_id'] = self::chat2PeerId($chatId);
+		$body['bot_id'] = $bot_id;
+		$res = $this->curl_proxy("https://api.vk.com/method/".$method,$body);
+		return $res;
+	}
+
 	public function messagesSearch($q, $peerId = null, $count = 10) {
 		$params = ['q' => $q, 'count' => $count];
 		if ($peerId)
@@ -68,8 +79,13 @@ class UbVkApi {
 		return $this->vkRequest('messages.search', http_build_query($params));
 	}
 
-	public function messagesAddChatUser($userId, $chatId) {
+	public function messagesAddChatUser($userId, $chatId, $bp = false) {
+			if ($userId < 0){ return $this->addBotToChat($userId, $chatId, $bp); }
 		return $this->vkRequest('messages.addChatUser', 'chat_id=' . $chatId . '&user_id=' . $userId);
+	}
+
+	public function messagesRemoveChatUser($chatId, $userId) {
+		return $this->vkRequest('messages.removeChatUser', 'chat_id=' . $chatId . '&user_id=' . $userId);
 	}
 
 	function chatMessage($chatId, $message, $options = []) {
@@ -86,6 +102,22 @@ class UbVkApi {
 		return $res;
 	}
 
+	function SelfMessage($message, $options = []) {
+		$add = '';
+		if ($options)
+			foreach ($options as $k => $val)
+				$add .= '&' . urlencode($k) . '=' . urlencode($val);
+
+		$me = $this->usersGet();
+	if (isset($me['error'])) {
+		return $me['error'];
+	}
+
+		$userId = (int)@$me['response'][0]['id'];
+		$res = $this->vkRequest('messages.send', 'random_id=' . mt_rand(0, 2000000000) . '&user_id=' . $userId . "&message=".urlencode($message) . $add);
+		return $res;
+	}
+
 	function messagesGetByConversationMessageId($peerId, $conversationMessageIds) {
 		if (is_array($conversationMessageIds))
 			$conversationMessageIds = implode(',', $conversationMessageIds);
@@ -94,7 +126,7 @@ class UbVkApi {
 	}
 
 	function messagesDelete($messageIds, $deleteForAll = false, $isSpam = false) {
-		$options = ['message_ids' => implode(',', $messageIds)];
+		$options = ['message_ids' => ((is_array($messageIds))? implode(',', $messageIds):$messageIds)];
 		if ($deleteForAll)
 			$options['delete_for_all'] = $deleteForAll;
 		if ($isSpam)
@@ -103,6 +135,11 @@ class UbVkApi {
 		return $this->vkRequest('messages.delete', http_build_query($options));
 	}
 
+	function messagesEdit($peerId, $message_id, $message) {
+		if ($peerId < 2000000000) $peerId+=2000000000;
+		$res = $this->vkRequest('messages.edit', 'random_id=' . mt_rand(0, 2000000000) . '&peer_id=' . $peerId . "&message=".urlencode($message) . "&message_id=" . $message_id);
+		return $res;
+	}
 
 	function messagesGetConversations($amount = 200, $filter = 'all') {
 		return $this->vkRequest('messages.getConversations', ['count' => intval($amount), 'filter' => $filter]);
@@ -114,14 +151,115 @@ class UbVkApi {
 		return $this->vkRequest('messages.getHistory', 'peer_id=' . $peerId . '&offset=' . $offset . '&count=' . $count . '&' . $options);
 	}
 
+	public function GetFwdMessagesByConversationMessageId($peerId = 0, $conversation_message_id = 0) {
+				$fwd = Array(); /* массив. всегда. чтоб count($fwd) >= 0 */
+		if ($peerId == 0 || $conversation_message_id == 0) { return $fwd; }
+		if ($peerId < 2000000000) $peerId+=2000000000;
+				$message = $this->messagesGetByConversationMessageId($peerId, $conversation_message_id);
+		if (isset($message['error'])) { return $fwd; }
+
+		if ((int)@$message["response"]["count"] == 0) { return $fwd; }
+
+		if (isset($message["response"]["items"][0]["fwd_messages"])) {
+				$fwd = $message["response"]["items"][0]["fwd_messages"]; }
+				return $fwd;
+	}
+
+	public function GetUsersIdsByFwdMessages($peerId = 0, $message_id = 0) {
+		$fwd = $this->GetFwdMessagesByConversationMessageId($peerId, $message_id);
+		$ids = Array(); /* массив. всегда. чтоб count($ids) >= 0 */
+		if(!count($fwd)) { return $ids; } /* не нашли. и всё тут */
+		foreach($fwd as $m) {
+		if ($m["from_id"] > 0) {
+				/* исключаем ботов, повторы */
+				$ids[$m["from_id"]]=$m["from_id"]; }
+		}
+		return $ids;
+	}
+
+	public function messagesGetInviteLink($peerId) {
+		if ($peerId < 2000000000) $peerId+=2000000000;
+		$res = $this->vkRequest('messages.getInviteLink', 'peer_id=' . $peerId);
+		if (isset($res["response"]["link"])) return $res["response"]["link"];
+		if (isset($res["error"]["error_msg"])) return $res["error"]["error_msg"];
+		return '';
+	}
+
+	public function joinChatByInviteLink($link) {
+		$res = $this->vkRequest('messages.joinChatByInviteLink', 'link=' . $link);
+		if (isset($res["response"]["chat_id"])) return $res["response"]["chat_id"];
+		if (isset($res["error"]["error_msg"])) return $res["error"]["error_msg"];
+		return $res;
+	}
+
+	public function getChat($chatId, $fields = null) {
+		$options = [];
+			$options[] = (is_array($chatId))? 'chat_ids=' . implode(',', $chatId) : 'chat_id=' . (int)$chatId;
+		if ($fields)
+			$options[] = 'fields=' . $fields;
+		return $this->vkRequest('messages.getChat', implode('&', $options));
+	}
+
+	public function getTime() {
+			if (!$this->token) { return time(); }
+			$getTime = $this->vkRequest('utils.getServerTime','');
+			$time = (isset($getTime["response"])) ? $getTime["response"]:time();
+		return $time;
+	}
 
 	public function usersGet($users = null, $fields = null) {
 		$options = [];
-		if ($users && count($users))
-			$options[] = 'user_ids=' . implode(',', $users);
+		if ($users) {
+			$options[] = 'user_ids=' . ((is_array($users)) ? implode(',', $users) : $users); }
 		if ($fields)
 			$options[] = 'fields=' . $fields;
 		return $this->vkRequest('users.get', implode('&', $options));
+	}
+
+	function wallCreateComment($owner_id, $post_id, $message, $options = []) {
+		$add = '';
+		if ($options)
+			foreach ($options as $k => $val)
+				$add .= '&' . urlencode($k) . '=' . urlencode($val);
+
+		$res = $this->vkRequest('wall.createComment', 'guid=' . mt_rand(0, 2000000000) . '&owner_id=' . urlencode($owner_id) . '&post_id=' . urlencode($post_id) . "&message=".urlencode($message) . $add);
+		return $res;
+	}
+
+	function wallDeleteComment($owner_id = 0, $comment_id = 0) {
+		$owner_id = (int) $owner_id;
+		$comment_id = (int) $comment_id;
+
+		if ($comment_id == 0 || $owner_id == 0) {
+			return 0;
+		}
+
+		$res = $this->vkRequest('wall.deleteComment', 'guid=' . mt_rand(0, 2000000000) . '&owner_id=' . $owner_id . '&comment_id=' . $comment_id);
+		return $res;
+	}
+
+	public function setCovidStatus($setCovidStatus, $ct = false) {
+		if (!$ct) $ct = $this->token;
+		$method = 'users.setCovidStatus';
+		$body['v'] = '5.103';
+		$body['access_token'] = $ct;
+		$body['status_id'] = (int) $setCovidStatus;
+		$res = $this->curl_proxy("https://api.vk.com/method/".$method,$body);
+		return $res;
+	}
+
+	public function onlinePrivacy($status, $mt = false) {
+		//$status - nobody(оффлайн для всех), all(Отключения оффлайна), friends(оффлайн для всех, кроме друзей)
+		if(!$mt) $mt = $this->token;
+		$method = 'account.setPrivacy';
+		$body = array(
+		    'key' => 'online',
+		    'value' => $status,
+		    'access_token' => $mt,
+		    'v'=> 5.103
+		);
+		$res = $this->curl_ME("https://api.vk.com/method/".$method,$body);
+		return $res;
 	}
 
 
@@ -140,17 +278,29 @@ class UbVkApi {
 		return $res;
 	}
 
-	function curl($url, $data = null, $headers = null) {
-		$response = $this->curl2($url, $data, $headers);
+	function curl($url, $data = null, $headers = null, $proxy = null) {
+		$response = $this->curl2($url, $data, $headers, $proxy);
 		return json_decode($response, true);
 	}
 
-	function curl2($url, $data = null, $headers = null) {
+	function curl_proxy($url, $data = null, $headers = null, $proxy = true) {
+		$response = $this->curl2($url, $data, $headers, $proxy);
+		return json_decode($response, true);
+	}
+
+	function curl2($url, $data = null, $headers = null, $proxy = null) {
 		$cUrl = curl_init( $url );
 		curl_setopt($cUrl, CURLOPT_URL, $url);
 		curl_setopt($cUrl,CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($cUrl,CURLOPT_TIMEOUT, 2);
 		curl_setopt($cUrl,CURLOPT_FOLLOWLOCATION, true);
+		if ($proxy) { /* тут можно задать прокси, тип */
+#		curl_setopt($cUrl,CURLOPT_PROXY, "тут_прокси_и_:порт"); 
+#		curl_setopt($cUrl,CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5); 
+		}
+		curl_setopt($cUrl,CURLOPT_FAILONERROR, true); 
+		curl_setopt($cUrl,CURLOPT_SSL_VERIFYPEER, 0);
+		curl_setopt($cUrl,CURLOPT_SSL_VERIFYHOST, 0);
 		if ($data) {
 			curl_setopt($cUrl, CURLOPT_POST, 1);
 			curl_setopt($cUrl, CURLOPT_POSTFIELDS, $data);
@@ -164,6 +314,33 @@ class UbVkApi {
 		curl_close( $cUrl );
 
 		return $response;
+	}
+
+	function curl_ME($url, $data = null, $headers = null, $proxy = null) {
+		$ch = curl_init( $url );
+
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_VERBOSE, 1);
+		curl_setopt($ch, CURLOPT_USERAGENT, "VKAndroidApp/5.48-4286 (1; 1; 1; 1; 1; 1)");
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+		curl_setopt($ch, CURLOPT_FAILONERROR, true); 
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		if ($data) {
+			curl_setopt($cUrl, CURLOPT_POST, 1);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+		}
+
+		if ($headers) {
+			curl_setopt($ch, CURLOPT_HEADER, 1);
+			curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		}
+
+		$response = curl_exec( $ch );
+		curl_close( $ch );
+
+		return json_decode($response, true);
 	}
 
 	static function chat2PeerId($chatId) {
