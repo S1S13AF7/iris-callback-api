@@ -12,14 +12,25 @@ class UbCallbackAddUser implements UbCallbackAction {
 		require_once(CLASSES_PATH . "Ub/VkApi.php");
 		$vk = new UbVkApi($userbot['token']);
 		$res = $vk->messagesAddChatUser($object['user_id'], $chatId, @$userbot['btoken']);
+
+		if(!isset($res['error'])) {
+			echo 'ok';
+			return;
+		}
+
 		if (isset($res['error'])) {
 			$peerId = UbVkApi::chat2PeerId($chatId);
 			$error = UbUtil::getVkErrorText($res['error']);
+
+			if ($error =='Пользователь уже в беседе') {
+			$vk->messagesSend($peerId, UB_ICON_WARN . ' ' . $error);
+			echo 'ok';
+			return;
+			}
+
 			$vk->messagesSend($peerId, UB_ICON_WARN . ' ' . $error);
 			UbUtil::echoErrorVkResponse($res['error']);
 			return;
 		}
-
-		echo 'ok';
 	}
 }
