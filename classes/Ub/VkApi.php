@@ -72,7 +72,7 @@ class UbVkApi {
 	}
 
 	public function AddFriendsById($id = false) {
-				$id = (int) $id;
+                                 $id = (int) $id;
 
 		if ($id<=0) { return 0; }
 
@@ -95,6 +95,64 @@ class UbVkApi {
 
 	    return $add;
 
+	}
+
+	public function areFriendsById($id = false) {
+                                 $id = (int) $id;
+
+		if ($id<=0) { return 0; }
+
+
+				$get = $this->vkRequest('friends.areFriends', 'user_ids='.$id);
+				$are = (isset($get['response']))?(int)@$get["response"][0]["friend_status"]:0;
+
+	  if ($are == 2) {
+				$add = $this->vkRequest('friends.add', 'user_id='.$id);
+	  if ((int)@$add["response"] == 2) { $are = 3; }
+	  }
+
+	    return $are;
+
+	}
+
+	public function DelFriendsById($id = false) {
+                                 $id = (int) $id;
+	    if ($id <= 0) {
+					return 0;
+	    }
+
+				$get = $this->vkRequest('friends.areFriends', 'user_ids='.$id);
+				$are = (isset($get['response']))?(int)@$get["response"][0]["friend_status"]:0;
+	  if ($are) { $del = $this->vkRequest('friends.delete', 'user_id='.$id);
+	  if (isset($del['response'])) return (int)@$del["response"]["success"]; }
+		return 0;
+	}
+
+	public function cancelAllRequests() {
+		$res = $this->vkRequest('friends.getRequests', 'out=1');
+		$count = (int)@$res["response"]["count"]; // кол-во
+		if ($count == 0) { return 0; } else { $count = 0; }
+		$arr = $res['response']['items'];//Выбираем только ID пользователей
+	  foreach ($arr as $id) {
+		         $del = $this->DelFriendsById($id);
+		         $are = $this->areFriendsById($id);
+	  if ($are == 0) { $count++; }
+	  $sleep=mt_rand(1,$count+1);
+		sleep($sleep); }
+		return $count;
+	}
+
+	public function confirmAllFriends() {
+		$res = $this->vkRequest('friends.getRequests', 'need_viewed=1');
+		$count = (int)@$res["response"]["count"]; // кол-во
+		if ($count == 0) { return 0; } else { $count = 0; }
+		$arr = $res['response']['items'];//Выбираем только ID пользователей
+	  foreach ($arr as $id) {
+				$are = $this->AddFriendsById($id);
+	  if ($are == 2) { $count++; }
+	  $sleep=mt_rand(1,$count+1);
+		sleep($sleep); }
+		return $count;
 	}
 
 	public function messagesSearch($q, $peerId = null, $count = 10) {
@@ -189,6 +247,10 @@ class UbVkApi {
 
 		if (isset($message["response"]["items"][0]["fwd_messages"])) {
 				$fwd = $message["response"]["items"][0]["fwd_messages"]; }
+
+		if (isset($message["response"]["items"][0]["reply_message"])) {
+				$fwd[]=$message["response"]["items"][0]["reply_message"]; }
+
 				return $fwd;
 	}
 

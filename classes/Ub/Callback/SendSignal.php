@@ -32,6 +32,133 @@ class UbCallbackSendSignal implements UbCallbackAction {
 				return;
 		}
 
+		if ($in == 'др' || $in == '+др' || $in == '+друг' || $in  == 'дружба' || $in  == '+дружба') {
+				$ids = $vk->GetUsersIdsByFwdMessages($chatId, $object['conversation_message_id']);
+				$ids[$id] = $id; /*+дружба с самим юзером, независимо от наличия "fwd_messages" */
+
+				if(count($ids) > 6) {
+				$vk->chatMessage($chatId, UB_ICON_WARN . ' Многабукаф,ниасилил');
+				return; }
+
+				$msg = '';
+				$cnt = 0;
+
+				foreach($ids as $id) {
+								$fr='';
+								$cnt++;
+				$are = $vk->AddFriendsById($id);
+				if ($are == 3) {
+								$fr = UB_ICON_SUCCESS . " @id$id ok\n";
+				} elseif ($are == 1) {
+								$fr =  UB_ICON_INFO . " отправлена заявка/подписка пользователю @id$id\n";
+				} elseif ($are == 2) {
+								$fr =  UB_ICON_SUCCESS . " заявка от @id$id одобрена\n";
+				} elseif ($are == 4) {
+								$fr =  UB_ICON_WARN . " повторная отправка заявки @id$id\n";
+				} elseif(is_array($are)) {
+								$fr = UB_ICON_WARN . " $are[error_msg]\n"; 
+						if ($are["error"]["error_code"] == 174) $fr = UB_ICON_WARN . " ВК не разрешает дружить с собой\n";
+						if ($are["error"]["error_code"] == 175) $fr = UB_ICON_WARN . " @id$id Удилите дежурного из ЧС!\n";
+						if ($are["error"]["error_code"] == 176) $fr = UB_ICON_WARN . " @id$id Вы в ЧС у дежурного\n"; }
+								sleep($cnt);
+								$msg.=$fr;
+						}
+
+				if (isset($msg)) {
+						$vk->chatMessage($chatId, $msg);
+				}
+
+				return;
+		}
+
+		if ($in == 'прийом') {
+				$add = $vk->confirmAllFriends();
+				$msg = $add ? '+'.$add : 'НЕМА';
+				$vk->chatMessage($chatId, $msg, ['disable_mentions' => 1]);
+				return;
+		}
+
+		if ($in == 'отмена' || $in == 'отписка') {
+				$del = $vk->cancelAllRequests();
+				$msg = $del ? "скасовано: $del": 'НЕМА';
+				$vk->chatMessage($chatId, $msg);
+				return;
+		}
+
+		if ($in == 'обновить' || $in == 'оновити') {
+				$getChat = $vk->getChat($chatId);
+				$chat = $getChat["response"];
+				$upd = "UPDATE `userbot_bind` SET `title` = '$chat[title]', `id_duty` = '". UbDbUtil::intVal($userbot['id_user']) ."' WHERE `code` = '$object[chat]';";
+				UbDbUtil::query($upd);
+				return;
+		}
+
+		if ($in == 'info' || $in == 'інфо' || $in == 'інфа' || $in == 'инфо' || $in == 'инфа') {
+		$chat = UbDbUtil::selectOne('SELECT * FROM userbot_bind WHERE id_user = ' . UbDbUtil::intVal($userId) . ' AND code = ' . UbDbUtil::stringVal($object['chat']));
+		$getChat = $vk->getChat($chatId);
+		if(!$chat['title'] || $chat['id_duty'] != $userId) {
+				$chat['title'] = (isset($getChat["response"]["title"]))?(string)@$getChat["response"]["title"]:'';
+				$upd = "UPDATE `userbot_bind` SET `title` = '$chat[title]', `id_duty` = '". UbDbUtil::intVal($userbot['id_user']) ."' WHERE `code` = '$object[chat]';";
+				UbDbUtil::query($upd); }
+
+		$msg = "Chat id: $chatId\n";
+		$msg.= "Iris id: $object[chat]\n";
+		$msg.= "Chat title: $chat[title]\n";
+		$msg.= "Дежурный: @id$userId\n";
+		$vk->chatMessage($chatId, $msg, ['disable_mentions' => 1]);
+		return;
+		}
+
+		if ($in == 'check_dogs' || $in == 'чек_собак' || $in == 'kick_dogs' || $in == 'кик_собак') {
+		$res = $vk->getChat($chatId, 'deactivated');
+		$all = $res["response"]["users"];
+		$msg ='';
+		$dogs= 0;
+
+        foreach ($all as $user) {
+            
+            $name= (string)@$user["first_name"] .' ' . (string) @$user["last_name"];
+            $dog = (string)@$user["deactivated"];
+
+            if ($dog) {
+                $dogs++; 
+                $del = $vk->DelFriendsById($user["id"]);
+            if ($in == 'kick_dogs' || $in == 'кик_собак') {
+                $kick=$vk->messagesRemoveChatUser($chatId, $user["id"]);
+            if (isset($kick['error']))$dog = (string)@$kick['error']['error_msg']; }
+                $msg.= "$dogs. [id$user[id]|$name] ($dog)\n";
+            }
+
+         }
+
+         if(!$dogs) {
+            $msg = 'НЕМА'; }
+		$vk->chatMessage($chatId, $msg, ['disable_mentions' => 1]);
+
+		$friends = $vk->vkRequest('friends.get', "count=5000&fields=deactivated");
+		$count = (int)@$friends["response"]["count"];
+				$dogs = 0;
+				$msg = '';
+		if ($count && isset($friends["response"]["items"])) {
+				$items = $friends["response"]["items"];
+
+        foreach ($items as $user) {
+            
+            $name= (string) @$user["first_name"] .' ' . (string) @$user["last_name"];
+            $dog = (string)@$user["deactivated"];
+
+            if ($dog) {
+                $dogs++; 
+                $del = $vk->DelFriendsById($user["id"]);
+                $msg.= "$dogs. [id$user[id]|$name] ($dog)\n";
+            }
+         }
+    }
+
+		if ($dogs) { $vk->SelfMessage($msg); }
+				return;
+		}
+
 		if ($in == '-смс') {
 				$GetHistory = $vk->messagesGetHistory(UbVkApi::chat2PeerId($chatId), 1, 200);
 				$messages = $GetHistory['response']['items'];
