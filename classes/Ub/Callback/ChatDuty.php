@@ -31,8 +31,13 @@ class UbCallbackChatDuty implements UbCallbackAction {
 
 				if (isset($add['error'])) {
 				$error = UbUtil::getVkErrorText($add['error']);
+				if ($add['error']["error_code"] == 176) {
+				$del = $vk->vkRequest('account.unban', 'user_id=' . $duty); sleep(1);
+				$add = $vk->vkRequest('friends.add', 'user_id=' . $duty); sleep(1);
+				if(!isset($add['error'])) {		self::closeConnection(); }
+				} else {
 				$vk->SelfMessage(UB_ICON_WARN . " не удалось добавить @id$duty (дежурный в $chat)\n$error");
-				UbUtil::echoErrorVkResponse($res['error']);
+				UbUtil::echoErrorVkResponse($add['error']); }
 				}
 		}
 
