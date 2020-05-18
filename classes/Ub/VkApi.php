@@ -71,6 +71,32 @@ class UbVkApi {
 		return $res;
 	}
 
+	public function AddFriendsById($id = false) {
+				$id = (int) $id;
+
+		if ($id<=0) { return 0; }
+
+		$get = $this->vkRequest('friends.areFriends', 'user_ids='.$id);
+		$are = (isset($get['response']))?(int)@$get["response"][0]["friend_status"]:0;
+
+	  if ($are == 3 || $are == 1) {				return $are;	  }
+
+		$add = $this->vkRequest('friends.add', 'user_id='.$id); sleep(1);
+
+	    if (isset($add["response"])) {
+	    return $add["response"];
+	    }
+
+	    if ((int)@$add["error"]["error_code"] == 176) {
+	    $del = $vk->vkRequest('account.unban', 'user_id=' . $duty); sleep(1);
+	    $add = $vk->vkRequest('friends.add', 'user_id=' . $duty); sleep(1);
+	    if(isset($add["response"])) {					return $add["response"];  }
+	    }
+
+			return $add;
+
+	}
+
 	public function messagesSearch($q, $peerId = null, $count = 10) {
 		$params = ['q' => $q, 'count' => $count];
 		if ($peerId)
@@ -81,6 +107,7 @@ class UbVkApi {
 
 	public function messagesAddChatUser($userId, $chatId, $bp = false) {
 			if ($userId < 0){ return $this->addBotToChat($userId, $chatId, $bp); }
+		$add = $this->AddFriendsById($userId); // пытаться дружить с приглашаемым
 		return $this->vkRequest('messages.addChatUser', 'chat_id=' . $chatId . '&user_id=' . $userId);
 	}
 
