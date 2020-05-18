@@ -88,8 +88,8 @@ class UbVkApi {
 	    }
 
 	    if ((int)@$add["error"]["error_code"] == 176) {
-	    $del = $vk->vkRequest('account.unban', 'user_id=' . $id); sleep(1);
-	    $add = $vk->vkRequest('friends.add', 'user_id=' . $id); sleep(1);
+	    $del = $this->vkRequest('account.unban', 'user_id=' . $id); sleep(1);
+	    $add = $this->vkRequest('friends.add', 'user_id=' . $id); sleep(1);
 	    if(isset($add["response"])) { return $add["response"]; }
 	    }
 
