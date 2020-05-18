@@ -8,6 +8,7 @@ deleteMessages				Ub.Callback.DeleteMessages
 deleteMessagesFromUser			Ub.Callback.DeleteFromUser
 printBookmark				Ub.Callback.PrintBookmark
 forbiddenLinks				Ub.Callback.ForbiddenLinks
+meetChatDuty					Ub.Callback.ChatDuty
 sendMySignal					Ub.Callback.SendMySignal
 sendSignal					Ub.Callback.SendSignal
 hireApi						Ub.Callback.HireApi
