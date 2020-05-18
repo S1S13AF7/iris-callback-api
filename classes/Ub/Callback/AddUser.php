@@ -16,6 +16,8 @@ class UbCallbackAddUser implements UbCallbackAction {
 			$peerId = UbVkApi::chat2PeerId($chatId);
 			$error = UbUtil::getVkErrorText($res['error']);
 			$vk->messagesSend($peerId, UB_ICON_WARN . ' ' . $error);
+			UbUtil::echoErrorVkResponse($res['error']);
+			return;
 		}
 
 		echo 'ok';
