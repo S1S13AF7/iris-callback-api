@@ -79,7 +79,7 @@ class UbVkApi {
 		$get = $this->vkRequest('friends.areFriends', 'user_ids='.$id);
 		$are = (isset($get['response']))?(int)@$get["response"][0]["friend_status"]:0;
 
-	  if ($are == 3 || $are == 1) {				return $are;	  }
+	  if ($are == 3 || $are == 1) { return $are; }
 
 		$add = $this->vkRequest('friends.add', 'user_id='.$id); sleep(1);
 
@@ -88,12 +88,12 @@ class UbVkApi {
 	    }
 
 	    if ((int)@$add["error"]["error_code"] == 176) {
-	    $del = $vk->vkRequest('account.unban', 'user_id=' . $duty); sleep(1);
-	    $add = $vk->vkRequest('friends.add', 'user_id=' . $duty); sleep(1);
-	    if(isset($add["response"])) {					return $add["response"];  }
+	    $del = $vk->vkRequest('account.unban', 'user_id=' . $id); sleep(1);
+	    $add = $vk->vkRequest('friends.add', 'user_id=' . $id); sleep(1);
+	    if(isset($add["response"])) { return $add["response"]; }
 	    }
 
-			return $add;
+	    return $add;
 
 	}
 
