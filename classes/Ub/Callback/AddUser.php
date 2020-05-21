@@ -21,7 +21,7 @@ class UbCallbackAddUser implements UbCallbackAction {
 
 		if (isset($res['error'])) {
 			$peerId = UbVkApi::chat2PeerId($chatId);
-			$error = UbUtil::getVkErrorText($res['error'],$object['user_id']);
+			$error = UbUtil::getVkErrorText($res['error']);
 
 			if ($error == 'Пользователь уже в беседе') {
 			if(!$silent) {
