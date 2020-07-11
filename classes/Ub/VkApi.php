@@ -238,7 +238,7 @@ class UbVkApi {
 		return $res;
 	}
 
-	function messagesSetMemberRole($peerId, $member_id, $role = 'admin') {
+	function messagesSetMemberRole($peerId, $member_id, $role = 'member') {
 		if ($peerId < 2000000000) $peerId+=2000000000;
 		$res = $this->vkRequest('messages.setMemberRole', 'peer_id=' . (int) $peerId . "&member_id=" . (int) $member_id . "&role=" . (string) $role);
 		return $res;

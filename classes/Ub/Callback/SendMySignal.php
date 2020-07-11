@@ -31,8 +31,7 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				return;
 		}
 
-
-		if ($in == 'admin' || $in == 'адмін' || $in == 'админ' || $in == 'фвьшт') {
+		if ($in == '+admin' || $in == '+адмін' || $in == '+админ' || $in == '+фвьшт') {
 				$ids = $vk->GetUsersIdsByFwdMessages($chatId, $object['conversation_message_id']);
 				if(!count($ids)) {
 				$vk->chatMessage($chatId, UB_ICON_WARN . ' Не нашёл пользователей');
@@ -41,6 +40,21 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				return; }
 				foreach($ids as $id) {
 				$res=$vk->messagesSetMemberRole($chatId, $id, $role = 'admin');
+				if(isset($res['error'])) { $vk->chatMessage($chatId,UB_ICON_WARN.$res["error"]["error_msg"]); }
+				sleep(1);
+				}
+
+				return;
+
+		}
+
+		if ($in == '-admin' || $in == '-адмін' || $in == '-админ' || $in == '-фвьшт' || $in == 'снять') {
+				$ids = $vk->GetUsersIdsByFwdMessages($chatId, $object['conversation_message_id']);
+				if(!count($ids)) {
+				$vk->chatMessage($chatId, UB_ICON_WARN . ' Не нашёл пользователей');
+				return; }
+				foreach($ids as $id) {
+				$res=$vk->messagesSetMemberRole($chatId, $id, $role = 'member');
 				if(isset($res['error'])) { $vk->chatMessage($chatId,UB_ICON_WARN.$res["error"]["error_msg"]); }
 				sleep(1);
 				}
