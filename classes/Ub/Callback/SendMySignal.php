@@ -26,9 +26,27 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 		$in = $object['value']; // наш сигнал
 		$time = $vk->getTime(); // ServerTime
 
-		if ($in == 'ping' || $in == 'пинг'  || $in == 'пінг'  || $in == 'пінґ') {
+		if ($in == 'ping' || $in == 'пинг' || $in == 'пінг' || $in == 'пінґ' || $in == 'зштп') {
 				$vk->chatMessage($chatId, "PONG\n" .($time - $message['date']). " сек");
 				return;
+		}
+
+
+		if ($in == 'admin' || $in == 'адмін' || $in == 'админ' || $in == 'фвьшт') {
+				$ids = $vk->GetUsersIdsByFwdMessages($chatId, $object['conversation_message_id']);
+				if(!count($ids)) {
+				$vk->chatMessage($chatId, UB_ICON_WARN . ' Не нашёл пользователей');
+				return; } elseif(count($ids) > 3) {
+				$vk->chatMessage($chatId, UB_ICON_WARN . ' может не стоит делать много админов?');
+				return; }
+				foreach($ids as $id) {
+				$res=$vk->messagesSetMemberRole($chatId, $id, $role = 'admin');
+				if(isset($res['error'])) { $vk->chatMessage($chatId,UB_ICON_WARN.$res["error"]["error_msg"]); }
+				sleep(1);
+				}
+
+				return;
+
 		}
 
 		if ($in == 'др' || $in == '+др' || $in == '+друг' || $in  == 'дружба' || $in  == '+дружба') {

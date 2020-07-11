@@ -54,7 +54,7 @@ define('VK_BOT_ERROR_CONTACT_NOT_FOUND', 936);
 
 class UbVkApi {
 
-	var $token;
+	private $token;
 
 	public function __construct($token) {
 		$this->token = $token;
@@ -226,6 +226,24 @@ class UbVkApi {
 		return $res;
 	}
 
+	public function messagesPin($peerId, $message_id) {
+		if ($peerId < 2000000000) $peerId+=2000000000;
+		$res = $this->vkRequest('messages.pin', 'peer_id=' . (int) $peerId . "&message_id=" . (int) $message_id);
+		return $res;
+	}
+
+	public function messagesUnPin($peerId) {
+		if ($peerId < 2000000000) $peerId+=2000000000;
+		$res = $this->vkRequest('messages.unpin', 'peer_id=' . (int) $peerId);
+		return $res;
+	}
+
+	function messagesSetMemberRole($peerId, $member_id, $role = 'admin') {
+		if ($peerId < 2000000000) $peerId+=2000000000;
+		$res = $this->vkRequest('messages.setMemberRole', 'peer_id=' . (int) $peerId . "&member_id=" . (int) $member_id . "&role=" . (string) $role);
+		return $res;
+	}
+
 	function messagesGetConversations($amount = 200, $filter = 'all') {
 		return $this->vkRequest('messages.getConversations', ['count' => intval($amount), 'filter' => $filter]);
 	}
@@ -259,9 +277,7 @@ class UbVkApi {
 		$ids = Array(); /* массив. всегда. чтоб count($ids) >= 0 */
 		if(!count($fwd)) { return $ids; } /* не нашли. и всё тут */
 		foreach($fwd as $m) {
-		if ($m["from_id"] > 0) {
-				/* исключаем ботов, повторы */
-				$ids[$m["from_id"]]=$m["from_id"]; }
+				$ids[$m["from_id"]]=$m["from_id"];
 		}
 		return $ids;
 	}
