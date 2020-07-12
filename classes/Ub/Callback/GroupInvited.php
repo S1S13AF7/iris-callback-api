@@ -24,11 +24,11 @@ class UbCallbackGroupInvited implements UbCallbackAction {
 		$result = $result['response'];
 		$goodChats = self::findChats($result['items'], $message);
 		$userChatId = 0;
-		if(!$goodChats) {
-			UbUtil::echoJson(UbUtil::buildErrorResponse('error', 'БЕДЫ С API', 0));
-			return;
-		} elseif ($goodChats['sure']) {
+		if ($goodChats['sure']) {
 			$userChatId = UbVkApi::peer2ChatId($goodChats['items'][0]['peer_id']);
+		} elseif(!isset($goodChats['items'])) {
+			UbUtil::echoJson(UbUtil::buildErrorResponse('error','что-то пошло не по плану',0));
+			return;
 		} else {
 			foreach ($goodChats['items'] as $chat) {
 				$result = $vk->messagesGetHistory($chat['peer_id'],0,100); sleep(1);
