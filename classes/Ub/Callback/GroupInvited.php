@@ -17,17 +17,17 @@ class UbCallbackGroupInvited implements UbCallbackAction {
 		$vk = new UbVkApi($userbot['token']);
 		$group_id = (int) $object["group_id"];
 		$bot_id = ($group_id > 0) ? "-$group_id" : $group_id;
-		$result = $vk->messagesGetConversations();
+		$result = $vk->messagesGetConversations(); sleep(1);
 		if (isset($result['error'])) {
 			return UbUtil::errorVkResponse($result['error']);
 		}
-		$result = $result['response'];
-		$goodChats = self::findChats($result['items'], $message);
+
+		$goodChats = self::findChats($result['response']['items'], $message);
 		$userChatId = 0;
 		if ($goodChats['sure']) {
 			$userChatId = UbVkApi::peer2ChatId($goodChats['items'][0]['peer_id']);
-		} elseif(!isset($goodChats['items'])) {
-			UbUtil::echoJson(UbUtil::buildErrorResponse('error','что-то пошло не по плану',0));
+		} elseif(!count($goodChats['items'])) {
+			UbUtil::echoJson(UbUtil::buildErrorResponse('error','не получено',0));
 			return;
 		} else {
 			foreach ($goodChats['items'] as $chat) {
@@ -58,6 +58,9 @@ class UbCallbackGroupInvited implements UbCallbackAction {
 
 	private static function findChats($items, $vkMessage) {
 		$goodChats = [];
+		if(!count($items)) {
+		return ['sure' => 0, 'items' => $goodChats];
+		} /* ніхрнена */
 		foreach ($items as $item) {
 			$lm = $item['last_message'];
 			$sLocal = $lm['conversation_message_id'];
