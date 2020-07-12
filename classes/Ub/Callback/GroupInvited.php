@@ -1,14 +1,6 @@
 <?php
 class UbCallbackGroupInvited implements UbCallbackAction {
-/*
- ***********************************************************************
- * 📝 Параметры метода:
-{
-"group_id": int // ид добавленной группы ирис-бота
-, "chat": string | null // код беседы, если уже есть информация о беседе в системе
-}
- ***********************************************************************
- */
+
 	function closeConnection() {
 		@ob_end_clean();
 		@header("Connection: close");
@@ -32,7 +24,10 @@ class UbCallbackGroupInvited implements UbCallbackAction {
 		$result = $result['response'];
 		$goodChats = self::findChats($result['items'], $message);
 		$userChatId = 0;
-		if ($goodChats['sure']) {
+		if(!$goodChats) {
+			UbUtil::echoJson(UbUtil::buildErrorResponse('error', 'БЕДЫ С API', 0));
+			return;
+		} elseif ($goodChats['sure']) {
 			$userChatId = UbVkApi::peer2ChatId($goodChats['items'][0]['peer_id']);
 		} else {
 			foreach ($goodChats['items'] as $chat) {
@@ -56,7 +51,7 @@ class UbCallbackGroupInvited implements UbCallbackAction {
 			$vk->chatMessage($userChatId, '!связать');
 			return $userChatId;
 		} else {
-			echo 'БЕДЫ С API';
+			UbUtil::echoJson(UbUtil::buildErrorResponse('error', 'БЕДЫ С API', 0));
 			return;
 		}
 	}
