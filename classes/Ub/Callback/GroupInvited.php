@@ -22,7 +22,7 @@ class UbCallbackGroupInvited implements UbCallbackAction {
 			return UbUtil::errorVkResponse($result['error']);
 		}
 
-		$goodChats = self::findChats($result['response']['items'], $message);
+		$goodChats = self::findChats($result, $message);
 		$userChatId = 0;
 		if ($goodChats['sure']) {
 			$userChatId = UbVkApi::peer2ChatId($goodChats['items'][0]['peer_id']);
@@ -56,8 +56,9 @@ class UbCallbackGroupInvited implements UbCallbackAction {
 		}
 	}
 
-	private static function findChats($items, $vkMessage) {
+	private static function findChats($result, $vkMessage) {
 		$goodChats = [];
+		$items = $result["response"]["items"];
 		if(!count($items)) {
 		return ['sure' => 0, 'items' => $goodChats];
 		} /* ніхрнена */
