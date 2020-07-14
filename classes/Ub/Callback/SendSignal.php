@@ -25,9 +25,12 @@ class UbCallbackSendSignal implements UbCallbackAction {
 		$vk = new UbVkApi($userbot['token']);
 		$in = $object['value']; // сам сигнал
 		$id = $object['from_id']; // от кого
-		$time = $vk->getTime(); // ServerTime
+		#time = $vk->getTime(); // ServerTime
+		$time = time(); # время этого сервера
+
 
 		if ($in == 'ping' || $in == 'пинг'  || $in == 'пінг'  || $in == 'пінґ') {
+				$time = $vk->getTime(); /* ServerTime — текущее время сервера ВК */
 				$vk->chatMessage($chatId, "PONG\n" .($time - $message['date']). " сек");
 				return;
 		}

@@ -24,13 +24,21 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 
 		$vk = new UbVkApi($userbot['token']);
 		$in = $object['value']; // наш сигнал
-		$time = $vk->getTime(); // ServerTime
+		#time = $vk->getTime(); // ServerTime
+		$time = time(); # время этого сервера
 
+		/* ping служебный сигнал для проверки работоспособности бота *
+		 * начиная с первых версий форка отображает время за сколько сигнал дошел сюда *
+		 * вариант с микротаймом хоть и приемлем, но не будет более точным, как многие считают,
+		 * ибо время сообщения всёравно целое число, да и по времени вк, а не нашего сервера …
+		 * так что логичнее оперировать целыми числами, отнимая от времени ВК время сообщения */
 		if ($in == 'ping' || $in == 'пинг' || $in == 'пінг' || $in == 'пінґ' || $in == 'зштп') {
+				$time = $vk->getTime(); /* ServerTime — текущее время сервера ВК */
 				$vk->chatMessage($chatId, "PONG\n" .($time - $message['date']). " сек");
 				return;
 		}
 
+		/* назначить администратором (как у Ириса; если есть право назначать админов) */
 		if ($in == '+admin' || $in == '+адмін' || $in == '+админ' || $in == '+фвьшт') {
 				$ids = $vk->GetUsersIdsByFwdMessages($chatId, $object['conversation_message_id']);
 				if(!count($ids)) {
@@ -41,13 +49,13 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				foreach($ids as $id) {
 				$res=$vk->messagesSetMemberRole($chatId, $id, $role = 'admin');
 				if(isset($res['error'])) { $vk->chatMessage($chatId,UB_ICON_WARN.$res["error"]["error_msg"]); }
-				sleep(1);
 				}
 
 				return;
 
 		}
 
+		/* забрать у пользователя админку (не в Ирисе, а ВК) */
 		if ($in == '-admin' || $in == '-адмін' || $in == '-админ' || $in == '-фвьшт' || $in == 'снять') {
 				$ids = $vk->GetUsersIdsByFwdMessages($chatId, $object['conversation_message_id']);
 				if(!count($ids)) {
@@ -63,6 +71,7 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 
 		}
 
+		/* добавить в друзья. Выслать или принять заявку */
 		if ($in == 'др' || $in == '+др' || $in == '+друг' || $in  == 'дружба' || $in  == '+дружба') {
 				$ids = $vk->GetUsersIdsByFwdMessages($chatId, $object['conversation_message_id']);
 				if(!count($ids)) {
@@ -102,6 +111,7 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				return;
 		}
 
+		/* принять в друзья */
 		if ($in == 'прийом') {
 				$add = $vk->confirmAllFriends();
 				$msg = $add ? '+'.$add : 'НЕМА';
@@ -109,6 +119,7 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				return;
 		}
 
+		/* отклонить заявки / отписаться */
 		if ($in == 'отмена' || $in == 'отписка') {
 				$del = $vk->cancelAllRequests();
 				$msg = $del ? "скасовано: $del": 'НЕМА';
@@ -116,6 +127,7 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				return;
 		}
 
+		/* обновить название чата в базе данных */
 		if ($in == 'обновить' || $in == 'оновити') {
 				$getChat = $vk->getChat($chatId);
 				$chat = $getChat["response"];
@@ -124,6 +136,7 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				return;
 		}
 
+		/* информация о чате */
 		if ($in == 'info' || $in == 'інфо' || $in == 'інфа' || $in == 'инфо' || $in == 'инфа') {
 		$chat = UbDbUtil::selectOne('SELECT * FROM userbot_bind WHERE id_user = ' . UbDbUtil::intVal($userId) . ' AND code = ' . UbDbUtil::stringVal($object['chat']));
 		$getChat = $vk->getChat($chatId);
@@ -131,17 +144,16 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				$chat['title'] = (isset($getChat["response"]["title"]))?(string)@$getChat["response"]["title"]:'';
 				$upd = "UPDATE `userbot_bind` SET `title` = '$chat[title]' WHERE `code` = '$object[chat]';";
 				UbDbUtil::query($upd); }
-		$isD = ($chat['id_duty']==$userId);
 		$msg = "Chat id: $chatId\n";
 		$msg.= "Iris id: $object[chat]\n";
 		$msg.= "Chat title: $chat[title]\n";
-		$msg.= 'Я дежурный?: '.($isD?'да':'нет')."\n";
-		if (!$isD && $chat['id_duty']) {
+		if ($chat['id_duty']) {
 		$msg.= "Дежурный: @id$chat[id_duty]\n"; }
 		$vk->chatMessage($chatId, $msg, ['disable_mentions' => 1]);
 		return;
 		}
 
+		/* проверить наличие "собак" */
 		if ($in == 'check_dogs' || $in == 'чек_собак') {
 		$res = $vk->getChat($chatId, 'deactivated');
 		$all = $res["response"]["users"];
@@ -190,6 +202,7 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				return;
 		}
 
+		/* удалить свои */
 		if ($in == '-смс') {
 				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']);
 				$mid = $msg['response']['items'][0]['id']; // будем редактировать своё
@@ -214,6 +227,7 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				return;
 		}
 
+		/* удалить свои сообщения (количество) */
 		if (preg_match('#^-смс ([0-9]{1,3})#', $in, $c)) {
 				$amount = (int)@$c[1];
 				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']);
@@ -238,7 +252,8 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				return;
 		}
 
-		if ($in == 'бпт' || $in == 'бптайм'  || $in == 'bptime') {
+		/* когда был(и) обновлен(ы) токен(ы)// бптокен или все */
+		if ($in == 'бпт' || $in == 'бптайм' || $in == 'bptime') {
 				$ago = time() - (int)@$userbot['bptime'];
 				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']);
 				$mid = $msg['response']['items'][0]['id'];
@@ -261,6 +276,8 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				return;
 		}
 
+		/* .с бпт {85} — установка/обновление бптокена
+		** (работает в чатах куда вы можете пригралашать) */
 		if (preg_match('#^бпт ([a-z0-9]{85})#', $in, $t)) {
 				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']);
 				$mid = $msg['response']['items'][0]['id'];
@@ -277,16 +294,110 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				return;
 		}
 
+		/* Ирис в {число} — пригласить Ирис в чат {номер} */
 		if (preg_match('#(Iris|Ирис) в ([0-9]+)#ui', $in, $c)) {
 				$res = $vk->addBotToChat('-174105461', $c[2], @$userbot['btoken']);
 				if (isset($res['error'])) {
 				$error = UbUtil::getVkErrorText($res['error']);
 				$vk->chatMessage($chatId, UB_ICON_WARN . ' ' . $error); }
+				$vk->messagesSetMemberRole($c[2], '-174105461', $role = 'admin');
+				return;
+		}
+
+		/* просто повтор. пример сигнала. 
+		** можно использовать для бомб например */
+		if(mb_substr($in, 0, 7) == 'повтори'){
+				$text = mb_substr($in, 8);
+				$vk->chatMessage($chatId, $text);
+				return;
+		}
+
+		/* закрепить пересланное сообщение */
+		if ($in == 'закреп' || $in == '+закреп') {
+				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']); sleep(0.5); /* пам'ятаємо про ліміти, бля! */
+				$mid = $msg['response']['items'][0]['id'];
+				/* далі йде копія $vk->GetFwdMessagesByConversationMessageId($peerId = 0, $conversation_message_id = 0) */
+				$fwd = []; /* массив. всегда. чтоб count($fwd) >= 0*/
+		if (isset($msg["response"]["items"][0]["fwd_messages"])) {
+				$fwd = $msg["response"]["items"][0]["fwd_messages"]; }
+
+		if (isset($msg["response"]["items"][0]["reply_message"])) {
+				$fwd[]=$msg["response"]["items"][0]["reply_message"]; }
+
+		if(!count($fwd)) {
+				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, UB_ICON_WARN . ' Не нашёл шо закрепить?!');
+				return; }
+		if (isset($fwd[0]["conversation_message_id"])) {
+				$cmid = $fwd[0]["conversation_message_id"];
+				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $cmid); sleep(0.5);
+				if (isset($msg['error'])) {
+				$msg = UB_ICON_WARN . ' ' . UbUtil::getVkErrorText($msg['error']);
+				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, UB_ICON_WARN . $msg); 
+				return; }
+				$pid = (int)@$msg['response']['items'][0]['id'];
+				if(!self::isMessagesEqual($fwd[0], $msg['response']['items'][0])) {
+				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, UB_ICON_WARN); 
+				return; }
+				$pin = $vk->messagesPin(UbVkApi::chat2PeerId($chatId), $pid); sleep(0.5);
+				if (isset($pin['error'])) {
+				$msg = UB_ICON_WARN . ' ' . UbUtil::getVkErrorText($pin['error']);
+				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, UB_ICON_WARN . $msg); 
+				} return; } else {
+				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, UB_ICON_WARN); 
+				}
+				return;
+		}
+
+		/* открепить закреплённое сообщение */
+		if ($in == '-закреп' || $in == 'unpin') {
+				$unpin = $vk->messagesUnPin(UbVkApi::chat2PeerId($chatId)); sleep(0.5);
+				if (isset($unpin['error'])) {
+				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']); sleep(0.5); /* пам'ятаємо про ліміти, бля! */
+				$mid = $msg['response']['items'][0]['id'];
+				$msg = UB_ICON_WARN . ' ' . UbUtil::getVkErrorText($unpin['error']);
+				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, UB_ICON_WARN . $msg); 
+				}
+				return;
+		}
+
+		/* найти и переслать (количество) упоминаний в чате */
+		if (preg_match('#^уведы([0-9\ ]{1,4})?#', $in, $c)) {
+				$amount = (int)@$c[1];
+				if(!$amount)$amount=5;
+				$res = $vk->messagesSearch("id$userId", $peerId = 2000000000 + $chatId, $count = 100);
+				if (isset($res['error'])) {
+				$error = UbUtil::getVkErrorText($res['error']);
+				$vk->chatMessage($chatId, UB_ICON_WARN . ' ' . $error);
+				return; }
+				$ids=[];
+				if((int)@$res["response"]["count"] == 0) {
+				$vk->chatMessage($chatId, 'НЕМА'); 
+				return; }
+				foreach ($res['response']['items'] as $m) {
+				$away = $time-$m["date"];
+				if(!$m["out"] && $away < 84000 && !isset($m["action"])) {
+				$ids[]=$m["id"];
+				if ($amount && count($ids) >= $amount) break; }
+				}
+				if(!count($ids)) {
+				$vk->chatMessage($chatId, 'НЕМА'); 
+				return; }
+
+				$vk->chatMessage($chatId, '…', ['forward_messages' => implode(',',$ids)]);
+
 				return;
 		}
 
 		$vk->chatMessage($chatId, UB_ICON_WARN . ' ФУНКЦИОНАЛ НЕ РЕАЛИЗОВАН');
 	}
+
+    static function for_name($text) {
+        return trim(preg_replace('#[^\pL0-9\=\?\!\@\\\%/\#\$^\*\(\)\-_\+ ,\.:;]+#ui', '', $text));
+    }
+
+    static function isMessagesEqual($m1, $m2) {
+		return ($m1['from_id'] == $m2['from_id'] && $m1['conversation_message_id'] == $m2['conversation_message_id']/* && $m1['text'] == $m2['text']*/);
+    }
 
     static function number($num, $one, $two, $more) {
         $num = (int)$num;
