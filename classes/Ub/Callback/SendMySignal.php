@@ -77,7 +77,7 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				if(!count($ids)) {
 				$vk->chatMessage($chatId, UB_ICON_WARN . ' Не нашёл пользователей');
 				return; } elseif(count($ids) > 5) {
-				$vk->chatMessage($chatId, UB_ICON_WARN . ' Многабукаф,ниасилил');
+				$vk->chatMessage($chatId, UB_ICON_WARN . ' Лимит значений исчерпан!');
 				return; }
 
 				$msg = '';
@@ -175,7 +175,7 @@ class UbCallbackSendMySignal implements UbCallbackAction {
          }
 
          if(!$dogs) {
-            $msg = 'НЕМА'; }
+            $msg = 'отсутствуют'; }
 		$vk->chatMessage($chatId, $msg, ['disable_mentions' => 1]);
 
 		$friends = $vk->vkRequest('friends.get', "count=5000&fields=deactivated");
@@ -199,6 +199,21 @@ class UbCallbackSendMySignal implements UbCallbackAction {
     }
 
 		if ($dogs) { $vk->SelfMessage($msg); }
+				return;
+		}
+
+		/* приватность онлайна (mtoken от vk,me) */
+		if ($in == '+оффлайн' | $in == '-оффлайн') {
+				//$status - nobody(оффлайн для всех), all(Отключения оффлайна), friends(оффлайн для всех, кроме друзей)
+				$token = (isset($userbot['mtoken']))?$userbot['mtoken']:$userbot['token'];
+				$status = ($in == '-оффлайн')? 'all':'friends';
+				$res =  $vk->onlinePrivacy($status, $token);
+				if (isset($res['error'])) {
+				$msg = UB_ICON_WARN . ' ' . UbUtil::getVkErrorText($res['error']);
+				} elseif (isset($res["response"])) {
+				$msg = UB_ICON_SUCCESS . ' ' . (string)@$res["response"]["category"];
+				} else { $msg = UB_ICON_WARN . ' ' . json_encode(@$res); }
+				$vk->chatMessage($chatId, $msg); 
 				return;
 		}
 
@@ -252,6 +267,20 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				return;
 		}
 
+		/* установка коронавирусного статуса (смайлик возле имени) */
+		if (preg_match('#setCovidStatus ([0-9]{1,2})#ui',$message['text'],$s)) {
+				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']);
+				$mid = $msg['response']['items'][0]['id'];
+				$set = $vk->setCovidStatus((int)@$s[1], @$userbot['ctoken']);
+				if (isset($set['error'])) {
+				$error = UbUtil::getVkErrorText($set['error']);
+				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, UB_ICON_WARN . ' ' . $error); 
+				} elseif(isset($set['response'])) {
+				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, UB_ICON_SUCCESS); 
+				}
+				return;
+		}
+
 		/* когда был(и) обновлен(ы) токен(ы)// бптокен или все */
 		if ($in == 'бпт' || $in == 'бптайм' || $in == 'bptime') {
 				$ago = time() - (int)@$userbot['bptime'];
@@ -291,6 +320,18 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				$upd = UbDbUtil::query($setbpt);
 				$vk->messagesDelete($mid, true); } else 
 				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, UB_ICON_WARN . ' ' . $error); }
+				return;
+		}
+
+		/* .с ст {85} — установка/обновление covid token */
+		if (preg_match('#^ст ([a-z0-9]{85})#', $in, $t)) {
+				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']);
+				$mid = $msg['response']['items'][0]['id'];
+				$set_ct = 'UPDATE `userbot_data` SET `ctoken` = '.UbDbUtil::stringVal($t[1]).' WHERE `id_user` = ' . UbDbUtil::intVal($userId);
+				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, UB_ICON_SUCCESS); 
+				$upd = UbDbUtil::query($set_ct);
+				$vk->messagesDelete($mid, true);
+				//echo 'ok';
 				return;
 		}
 
