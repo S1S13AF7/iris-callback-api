@@ -20,12 +20,15 @@ CREATE TABLE IF NOT EXISTS `userbot_bind` (
 
 CREATE TABLE IF NOT EXISTS `userbot_data` (
   `id_user` int(11) NOT NULL,
-  `token` text NOT NULL,
+  `token` text NOT NULL DEFAULT '',
   `btoken` text NOT NULL DEFAULT '',
+  `ctoken` text NOT NULL DEFAULT '',
+  `mtoken` text NOT NULL DEFAULT '',
   `bptime` int(11) NOT NULL DEFAULT '0',
   `secret` varchar(64) NOT NULL,
   PRIMARY KEY (`id_user`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -42,13 +42,17 @@ echo '<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html>
     return $password;
     }
 
-if (isset($_POST['token'])) {
 	require_once("classes/base.php");
 	require_once(CLASSES_PATH . "Ub/DbUtil.php");
 	require_once(CLASSES_PATH . 'Ub/VkApi.php');
-	$token =  @$_POST['token'];
-	$btoken = @$_POST['btoken'];
-	$secret = (isset($_POST['secret'])?(string)@$_POST['secret']:passgen(mt_rand(8, 16)));
+	require_once(CLASSES_PATH . "Ub/Util.php");
+
+if (isset($_POST['token']) || isset($_POST['mtoken'])) {
+	$token =  (isset($_POST['token'])?@$_POST['token']:@$_POST['mtoken']);
+	$mtoken = (isset($_POST['mtoken'])?@$_POST['mtoken']:@$_POST['token']);
+	$btoken = (isset($_POST['btoken'])?@$_POST['btoken']:'');
+	$ctoken = (isset($_POST['ctoken'])?@$_POST['ctoken']:'');
+	$secret = (isset($_POST['secret'])?(string)@$_POST['secret']:passgen(mt_rand(8, 32)));
 	$bptime = (int)time();
 	$vk = new UbVkApi($token);
 	$me = $vk->usersGet();
@@ -65,10 +69,14 @@ if (isset($_POST['token'])) {
 	}
 	UbDbUtil::query('INSERT INTO userbot_data SET id_user = ' . UbDbUtil::intVal($userId) . ', token = ' . UbDbUtil::stringVal($token)
 		 . ', btoken = ' . UbDbUtil::stringVal($btoken)
+		 . ', ctoken = ' . UbDbUtil::stringVal($ctoken)
+		 . ', mtoken = ' . UbDbUtil::stringVal($mtoken)
 		 . ', bptime = ' . UbDbUtil::intVal($bptime)
 		 . ', secret = ' . UbDbUtil::stringVal($_POST['secret'])
 		 . ' ON DUPLICATE KEY UPDATE token = VALUES(token)'
 			. ', btoken = VALUES(btoken)'
+			. ', ctoken = VALUES(ctoken)'
+			. ', mtoken = VALUES(mtoken)'
 			. ', bptime = VALUES(bptime)'
 			. ', secret = VALUES(secret)'
 	);
@@ -80,12 +88,13 @@ if (isset($_POST['token'])) {
 		echo '<p>' . $reg['error']['error_msg'] . ' (' . $reg['error']['error_code'] . ')</p>';
 		return;
 	}
-	echo 'Добавлено<br />'/*
+	echo UB_ICON_SUCCESS . ' Добавлено<br />'/*
 	. 'Теперь в лс бота введите "+api ' . htmlspecialchars($_POST['secret']) . ' ' . $actual_link . '"'*/
 	;
 	return;
 }
 ?>
+<div style="margin: 0 auto; max-width: 600px; padding: 4% 0; border:#911 solid; opacity:0.9;"/>
 <form action="" method="post">
 <table>
 <tr>
@@ -96,16 +105,30 @@ if (isset($_POST['token'])) {
 	</td>
 </tr>
 <tr>
+	<td>ME Токен</td>
+	<td><input type="text" name="mtoken" value="" placeholder="Токен" style="max-width:200px">
+	<a href="https://oauth.vk.com/authorize?client_id=6146827&display=mobile&scope=notify,friends,photos,audio,video,docs,status,notes,pages,wall,groups,messages,offline,notifications&redirect_uri=https://api.vk.com/blank.html&response_type=token&v=5.92"
+	  target="_blank" rel="external">»</a>
+	</td>
+</tr>
+<tr>
 	<td>БП Токен</td>
 	<td><input type="text" name="btoken" value="" placeholder="Токен" style="max-width:200px">
 	<a href="https://oauth.vk.com/authorize?client_id=6441755&redirect_uri=https://api.vk.com/blank.html&display=mobile&response_type=token&revoke=1"
 	  target="_blank" rel="external">»</a>
 	</td>
 </tr>
+<!-- <tr>
+	<td>Covid-19</td>
+	<td><input type="text" name="ctoken" value="" placeholder="Токен" style="max-width:200px">
+	<a href="https://oauth.vk.com/authorize?client_id=7362610&redirect_uri=https://api.vk.com/blank.html&display=mobile&response_type=token&revoke=1"
+	  target="_blank" rel="external">»</a>
+	</td>
+</tr> -->
 <tr>
 	<td>Секретка</td>
 	<td><input type="text" name="secret" value="<?php echo passgen(mt_rand(8, 16)); ?>" placeholder="Секретная фраза" style="max-width:200px">
-	<u title="Придумай сам(а)... или вот готовое">?</u>
+	<u title="Секретный код может содержать только латинские символы и цифры.">?</u>
 	</td>
 </tr>
 <tr>
@@ -114,4 +137,7 @@ if (isset($_POST['token'])) {
 </tr>
 </table>
 </form>
+<?php echo UB_ICON_WARN; ?> Для получения любого из токенов, достаточно нажать на стрелочку после формы ввода и скопировать необходимую часть, которая выделена жирным ниже <p>https://api.vk.com/blank.html#access_token=<strong>net25713724013023tokenexampled949763123<br />d80afa87fc9320c6tokenexamplee7506atokenexample</strong>&amp;expires_in=0&amp;user_id=</p><br />
+<?php echo UB_ICON_WARN; ?> Секретный код может содержать только латинские символы и цифры. 
+</div>
 </body></html>
