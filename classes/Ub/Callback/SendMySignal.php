@@ -345,11 +345,13 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				return;
 		}
 
-		/* просто повтор. пример сигнала. 
-		** можно использовать для бомб например */
-		if(mb_substr($in, 0, 7) == 'повтори'){
-				$text = mb_substr($in, 8);
-				$vk->chatMessage($chatId, $text);
+		/* повтор текста. Если задан mtoken будет отправлена "бомба" */
+		if (preg_match('#(повтори|скажи)(.+)#ui',$message['text'],$t)) {
+				$opt=['disable_mentions' => 1, 'dont_parse_links' => 1];
+				if (isset($userbot['mtoken']) && @$userbot['mtoken']!='') {
+				$opt=['disable_mentions' => 1, 'dont_parse_links' => 1, 'expire_ttl' => 84000]; 
+				$vk = new UbVkApi($userbot['mtoken']); }
+				$vk->chatMessage($chatId,$t[2], $opt); 
 				return;
 		}
 
