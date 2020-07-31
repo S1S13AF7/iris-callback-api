@@ -220,9 +220,13 @@ class UbVkApi {
 		return $this->vkRequest('messages.delete', http_build_query($options));
 	}
 
-	function messagesEdit($peerId, $message_id, $message) {
+	function messagesEdit($peerId, $message_id, $message, $options = []) {
+		$add = '';
+		if ($options)
+			foreach ($options as $k => $val)
+				$add .= '&' . urlencode($k) . '=' . urlencode($val);
 		if ($peerId < 2000000000) $peerId+=2000000000;
-		$res = $this->vkRequest('messages.edit', 'random_id=' . mt_rand(0, 2000000000) . '&peer_id=' . $peerId . "&message=".urlencode($message) . "&message_id=" . $message_id);
+		$res = $this->vkRequest('messages.edit', 'random_id=' . mt_rand(0, 2000000000) . '&peer_id=' . $peerId . "&message=".urlencode($message) . "&message_id=" . $message_id . $add);
 		return $res;
 	}
 
