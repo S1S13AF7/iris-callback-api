@@ -437,7 +437,7 @@ class UbVkApi {
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		if ($data) {
-			curl_setopt($cUrl, CURLOPT_POST, 1);
+			curl_setopt($ch, CURLOPT_POST, 1);
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 		}
 
