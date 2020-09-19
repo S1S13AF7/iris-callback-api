@@ -7,7 +7,7 @@ subscribeSignals			Ub.Callback.Bind
 deleteMessages				Ub.Callback.DeleteMessages
 deleteMessagesFromUser			Ub.Callback.DeleteFromUser
 groupbots.invited			Ub.Callback.GroupInvited
-printBookmark				Ub.Callback.PrintBookmark
+#printBookmark				Ub.Callback.PrintBookmark
 forbiddenLinks				Ub.Callback.ForbiddenLinks
 meetChatDuty					Ub.Callback.ChatDuty
 sendMySignal					Ub.Callback.SendMySignal
