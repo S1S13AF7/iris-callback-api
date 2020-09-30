@@ -59,10 +59,18 @@ if (isset($_POST['token']) || isset($_POST['mtoken'])) {
 	$mtoken = token(isset($_POST['mtoken'])?@$_POST['mtoken']:@$_POST['token']);
 	$btoken = token(isset($_POST['btoken'])?@$_POST['btoken']:'');
 	$ctoken = token(isset($_POST['ctoken'])?@$_POST['ctoken']:'');
-	$secret = token(isset($_POST['secret'])?(string)@$_POST['secret']:passgen(mt_rand(8, 32)));
+	$secret = isset($_POST['secret'])?(string)@$_POST['secret']:passgen(mt_rand(8, 32));
 	if(!$token && !$mtoken) {
 		echo '<h1>Ошибище</h1>';
 		echo '<p>Введенные вами данные не похожи на токены</p>';
+		return;
+	} elseif (strlen($secret) < 8) {
+		echo '<h1>Ошибище</h1>';
+		echo UB_ICON_NOTICE . ' Длина секрета сообщения должна быть не менее 8 символов';
+		return;
+	} elseif (strlen($secret) > 50) {
+		echo '<h1>Ошибище</h1>';
+		echo UB_ICON_NOTICE . ' Длина секрета сообщения должна быть не более 50 символов';
 		return;
 	}
 	$bptime = (int)time();
