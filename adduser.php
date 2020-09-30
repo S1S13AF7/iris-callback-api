@@ -47,12 +47,24 @@ echo '<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html>
 	require_once(CLASSES_PATH . 'Ub/VkApi.php');
 	require_once(CLASSES_PATH . "Ub/Util.php");
 
+	function token($data = ''){
+	$token = false;
+	if (preg_match('#([a-z0-9]{85})#', $data, $t)) {
+	$token = (string)$t[1]; }
+	return $token ? $token:'';
+	}
+
 if (isset($_POST['token']) || isset($_POST['mtoken'])) {
-	$token =  (isset($_POST['token'])?@$_POST['token']:@$_POST['mtoken']);
-	$mtoken = (isset($_POST['mtoken'])?@$_POST['mtoken']:@$_POST['token']);
-	$btoken = (isset($_POST['btoken'])?@$_POST['btoken']:'');
-	$ctoken = (isset($_POST['ctoken'])?@$_POST['ctoken']:'');
-	$secret = (isset($_POST['secret'])?(string)@$_POST['secret']:passgen(mt_rand(8, 32)));
+	$token =  token(isset($_POST['token'])?@$_POST['token']:@$_POST['mtoken']);
+	$mtoken = token(isset($_POST['mtoken'])?@$_POST['mtoken']:@$_POST['token']);
+	$btoken = token(isset($_POST['btoken'])?@$_POST['btoken']:'');
+	$ctoken = token(isset($_POST['ctoken'])?@$_POST['ctoken']:'');
+	$secret = token(isset($_POST['secret'])?(string)@$_POST['secret']:passgen(mt_rand(8, 32)));
+	if(!$token && !$mtoken) {
+		echo '<h1>Ошибище</h1>';
+		echo '<p>Введенные вами данные не похожи на токены</p>';
+		return;
+	}
 	$bptime = (int)time();
 	$vk = new UbVkApi($token);
 	$me = $vk->usersGet();
@@ -69,13 +81,11 @@ if (isset($_POST['token']) || isset($_POST['mtoken'])) {
 	}
 	UbDbUtil::query('INSERT INTO userbot_data SET id_user = ' . UbDbUtil::intVal($userId) . ', token = ' . UbDbUtil::stringVal($token)
 		 . ', btoken = ' . UbDbUtil::stringVal($btoken)
-		 . ', ctoken = ' . UbDbUtil::stringVal($ctoken)
 		 . ', mtoken = ' . UbDbUtil::stringVal($mtoken)
 		 . ', bptime = ' . UbDbUtil::intVal($bptime)
 		 . ', secret = ' . UbDbUtil::stringVal($_POST['secret'])
 		 . ' ON DUPLICATE KEY UPDATE token = VALUES(token)'
 			. ', btoken = VALUES(btoken)'
-			. ', ctoken = VALUES(ctoken)'
 			. ', mtoken = VALUES(mtoken)'
 			. ', bptime = VALUES(bptime)'
 			. ', secret = VALUES(secret)'
@@ -138,6 +148,5 @@ if (isset($_POST['token']) || isset($_POST['mtoken'])) {
 </table>
 </form>
 <?php echo UB_ICON_WARN; ?> Для получения любого из токенов, достаточно нажать на стрелочку после формы ввода и скопировать необходимую часть, которая выделена жирным ниже <p>https://api.vk.com/blank.html#access_token=<strong>net25713724013023tokenexampled949763123<br />d80afa87fc9320c6tokenexamplee7506atokenexample</strong>&amp;expires_in=0&amp;user_id=</p><br />
-<?php echo UB_ICON_WARN; ?> Секретный код может содержать только латинские символы и цифры. 
 </div>
 </body></html>
