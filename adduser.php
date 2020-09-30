@@ -66,11 +66,11 @@ if (isset($_POST['token']) || isset($_POST['mtoken'])) {
 		return;
 	} elseif (strlen($secret) < 8) {
 		echo '<h1>Ошибище</h1>';
-		echo UB_ICON_NOTICE . ' Длина секрета сообщения должна быть не менее 8 символов';
+		echo UB_ICON_NOTICE . ' Длина секрета должна быть не менее 8 символов';
 		return;
 	} elseif (strlen($secret) > 50) {
 		echo '<h1>Ошибище</h1>';
-		echo UB_ICON_NOTICE . ' Длина секрета сообщения должна быть не более 50 символов';
+		echo UB_ICON_NOTICE . ' Длина секрета должна быть не более 50 символов';
 		return;
 	}
 	$bptime = (int)time();
