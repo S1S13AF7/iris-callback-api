@@ -125,7 +125,7 @@ if (isset($_POST['token']) || isset($_POST['mtoken'])) {
 <tr>
 	<td>ME Токен</td>
 	<td><input type="text" name="mtoken" value="" placeholder="Токен" style="max-width:200px">
-	<a href="https://oauth.vk.com/authorize?client_id=6146827&display=mobile&scope=notify,friends,photos,audio,video,docs,status,notes,pages,wall,groups,messages,offline,notifications&redirect_uri=https://api.vk.com/blank.html&response_type=token&v=5.92"
+	<a href="https://oauth.vk.com/authorize?client_id=6146827&display=mobile&scope=offline&redirect_uri=https://oauth.vk.com/blank.html&response_type=token&revoke=1"
 	  target="_blank" rel="external">»</a>
 	</td>
 </tr>
