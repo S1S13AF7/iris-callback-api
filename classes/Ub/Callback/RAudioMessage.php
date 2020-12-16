@@ -1,18 +1,5 @@
-<?php
+﻿<?php
 class UbCallbackRAudioMessage implements UbCallbackAction {
-
-	/*{
-			"method":"messages.recogniseAudioMessage",
-			"user_id":int,
-			"secret":string,
-			"message":null,
-			"object":{
-			"local_id":int,
-			"chat":string
-			}
-		}
-	*/
-
 
 	function closeConnectionAndShowText($text) {
 		@ob_end_clean();
