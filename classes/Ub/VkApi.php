@@ -1,6 +1,6 @@
 <?php
 
-define('VK_API_VERSION', '5.92');
+define('VK_API_VERSION', '5.103');
 
 define('VK_BOT_ERROR_UNKNOWN', 1);
 define('VK_BOT_ERROR_APP_IS_OFF', 2);
@@ -170,7 +170,7 @@ class UbVkApi {
 	}
 
 	public function messagesRemoveChatUser($chatId, $userId) {
-		return $this->vkRequest('messages.removeChatUser', 'chat_id=' . $chatId . '&user_id=' . $userId);
+		return $this->vkRequest('messages.removeChatUser', 'chat_id=' . $chatId . '&member_id=' . $userId);
 	}
 
 	function chatMessage($chatId, $message, $options = []) {
@@ -225,7 +225,6 @@ class UbVkApi {
 		if ($options)
 			foreach ($options as $k => $val)
 				$add .= '&' . urlencode($k) . '=' . urlencode($val);
-		if ($peerId < 2000000000) $peerId+=2000000000;
 		$res = $this->vkRequest('messages.edit', 'random_id=' . mt_rand(0, 2000000000) . '&peer_id=' . $peerId . "&message=".urlencode($message) . "&message_id=" . $message_id . $add);
 		return $res;
 	}
