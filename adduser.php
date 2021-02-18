@@ -118,7 +118,7 @@ if (isset($_POST['token']) || isset($_POST['mtoken'])) {
 <tr>
 	<td>KM Токен</td>
 	<td><input type="text" name="token" value="" placeholder="Токен" style="max-width:200px">
-	<a href="https://oauth.vk.com/authorize?client_id=2685278&display=mobile&scope=notify,friends,photos,audio,video,docs,status,notes,pages,wall,groups,messages,offline,notifications&redirect_uri=https://api.vk.com/blank.html&response_type=token&v=5.92" 
+	<a href="https://oauth.vk.com/authorize?client_id=2685278&display=mobile&scope=notify,friends,photos,audio,video,docs,status,notes,pages,wall,groups,messages,offline,notifications&redirect_uri=https://oauth.vk.com/blank.html&response_type=token&v=5.92" 
 	  target="_blank" rel="external">»</a>
 	</td>
 </tr>
@@ -132,14 +132,14 @@ if (isset($_POST['token']) || isset($_POST['mtoken'])) {
 <tr>
 	<td>БП Токен</td>
 	<td><input type="text" name="btoken" value="" placeholder="Токен" style="max-width:200px">
-	<a href="https://oauth.vk.com/authorize?client_id=6441755&redirect_uri=https://api.vk.com/blank.html&display=mobile&response_type=token&revoke=1"
+	<a href="https://oauth.vk.com/authorize?client_id=6441755&redirect_uri=https://oauth.vk.com/blank.html&display=mobile&response_type=token&revoke=1"
 	  target="_blank" rel="external">»</a>
 	</td>
 </tr>
 <!-- <tr>
 	<td>Covid-19</td>
 	<td><input type="text" name="ctoken" value="" placeholder="Токен" style="max-width:200px">
-	<a href="https://oauth.vk.com/authorize?client_id=7362610&redirect_uri=https://api.vk.com/blank.html&display=mobile&response_type=token&revoke=1"
+	<a href="https://oauth.vk.com/authorize?client_id=7362610&redirect_uri=https://oauth.vk.com/blank.html&display=mobile&response_type=token&revoke=1"
 	  target="_blank" rel="external">»</a>
 	</td>
 </tr> -->
@@ -155,6 +155,6 @@ if (isset($_POST['token']) || isset($_POST['mtoken'])) {
 </tr>
 </table>
 </form>
-<?php echo UB_ICON_WARN; ?> Для получения любого из токенов, достаточно нажать на стрелочку после формы ввода и скопировать необходимую часть, которая выделена жирным ниже <p>https://api.vk.com/blank.html#access_token=<strong>net25713724013023tokenexampled949763123<br />d80afa87fc9320c6tokenexamplee7506atokenexample</strong>&amp;expires_in=0&amp;user_id=</p><br />
+<?php echo UB_ICON_WARN; ?> Для получения любого из токенов, достаточно нажать на стрелочку после формы ввода и скопировать необходимую часть, которая выделена жирным ниже <p>https://oauth.vk.com/blank.html#access_token=<strong>net25713724013023tokenexampled949763123<br />d80afa87fc9320c6tokenexamplee7506atokenexample</strong>&amp;expires_in=0&amp;user_id=</p><br />
 </div>
 </body></html>
