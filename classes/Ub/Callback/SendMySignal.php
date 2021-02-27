@@ -217,38 +217,22 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				return;
 		}
 
-		/* удалить свои */
-		if ($in == '-смс') {
-				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']);
-				$mid = $msg['response']['items'][0]['id']; // будем редактировать своё
-				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, "... удаляю сообщения ...");
-				$GetHistory = $vk->messagesGetHistory(UbVkApi::chat2PeerId($chatId), 1, 200);
-				$messages = $GetHistory['response']['items'];
-				$ids = Array();
-				foreach ($messages as $m) {
-				$away = $time-$m["date"];
-				if ((int)$m["from_id"] == $userId && $away < 84000 && !isset($m["action"])) {
-				$ids[] = $m['id']; }
-				}
-				if (!count($ids)) {
-				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, ' Не нашёл сообщений для удаления');
-				$vk->messagesDelete($mid, true); 
-				return; }
-
-				$res = $vk->messagesDelete($ids, true);
-
-				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, count($ids));
-				$vk->messagesDelete($mid, true); 
-				return;
-		}
-
 		/* удалить свои сообщения (количество) */
-		if (preg_match('#^-смс ([0-9]{1,3})#', $in, $c)) {
+		if (preg_match('#^-смс([0-9\ ]{1,4})?#', $in, $c)) {
 				$amount = (int)@$c[1];
-				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']);
-				$mid = $msg['response']['items'][0]['id']; // будем редактировать своё
-				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, "... удаляю сообщения ...");
-				$GetHistory = $vk->messagesGetHistory(UbVkApi::chat2PeerId($chatId), 1, 200);
+				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']); sleep(0.3);
+				$mid = (int)@$msg['response']['items'][0]['id']; // будем редактировать своё
+				if ($mid) {
+				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, UB_ICON_SUCCESS_OFF . " удаляю сообщения ..."); sleep(0.3); }
+				$GetHistory = $vk->messagesGetHistory(UbVkApi::chat2PeerId($chatId), 1, 200); sleep(0.3);
+				if (isset($GetHistory['error'])) {
+				$error = UbUtil::getVkErrorText($GetHistory['error']);
+				if ($mid) {
+				$edit = $vk->messagesEdit(UbVkApi::chat2PeerId($chatId),$mid,$error); 
+				if(!isset($edit['error'])) { return; }
+				}
+				$vk->chatMessage($chatId, UB_ICON_WARN . ' ' . $error);
+				return;	}
 				$messages = $GetHistory['response']['items'];
 				$ids = Array();
 				foreach ($messages as $m) {
@@ -257,20 +241,21 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				$ids[] = $m['id']; 
 				if ($amount && count($ids) >= $amount) break;				}
 				}
-				if (!count($ids)) {
+				if (!count($ids) && $mid) {
 				$vk->messagesDelete($mid, true); 
 				return; }
 
-				$res = $vk->messagesDelete($ids, true);
-				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, count($ids));
-				$vk->messagesDelete($mid, true); 
+				$res = $vk->messagesDelete($ids, true); sleep(0.3);
+				if ($mid) {
+				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, count($ids)); sleep(0.3);
+				$vk->messagesDelete($mid, true); }
 				return;
 		}
 
 		/* установка коронавирусного статуса (смайлик возле имени) */
-		if (preg_match('#setCovidStatus ([0-9]{1,2})#ui',$message['text'],$s)) {
+		if (preg_match('#setCovidStatus ([0-9]{1,3})#ui',$message['text'],$s)) {
 				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']);
-				$mid = $msg['response']['items'][0]['id'];
+				$mid = (int)@$msg['response']['items'][0]['id'];
 				$set = $vk->setCovidStatus((int)@$s[1], @$userbot['ctoken']);
 				if (isset($set['error'])) {
 				$error = UbUtil::getVkErrorText($set['error']);
@@ -285,7 +270,7 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 		if ($in == 'бпт' || $in == 'бптайм' || $in == 'bptime') {
 				$ago = time() - (int)@$userbot['bptime'];
 				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']);
-				$mid = $msg['response']['items'][0]['id'];
+				$mid = (int)@$msg['response']['items'][0]['id'];
 				if(!$userbot['bptime']) { 
 				$msg = UB_ICON_WARN . ' не задан';
 				} elseif($ago < 59) {
@@ -309,7 +294,7 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 		** (работает в чатах куда вы можете пригралашать) */
 		if (preg_match('#^бпт ([a-z0-9]{85})#', $in, $t)) {
 				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']);
-				$mid = $msg['response']['items'][0]['id'];
+				$mid = (int)@$msg['response']['items'][0]['id'];
 				$res = $vk->addBotToChat('-174105461', $chatId, $t[1]);
 				#res = $vk->addBotToChat('-182469235', $chatId, $t[1]);
 				if (isset($res['error'])) {
@@ -326,7 +311,7 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 		/* .с ст {85} — установка/обновление covid token */
 		if (preg_match('#^ст ([a-z0-9]{85})#', $in, $t)) {
 				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']);
-				$mid = $msg['response']['items'][0]['id'];
+				$mid = (int)@$msg['response']['items'][0]['id'];
 				$set_ct = 'UPDATE `userbot_data` SET `ctoken` = '.UbDbUtil::stringVal($t[1]).' WHERE `id_user` = ' . UbDbUtil::intVal($userId);
 				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, UB_ICON_SUCCESS); 
 				$upd = UbDbUtil::query($set_ct);
@@ -358,7 +343,7 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 		/* закрепить пересланное сообщение */
 		if ($in == 'закреп' || $in == '+закреп') {
 				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']); sleep(0.5); /* пам'ятаємо про ліміти, бля! */
-				$mid = $msg['response']['items'][0]['id'];
+				$mid = (int)@$msg['response']['items'][0]['id'];
 				/* далі йде копія $vk->GetFwdMessagesByConversationMessageId($peerId = 0, $conversation_message_id = 0) */
 				$fwd = []; /* массив. всегда. чтоб count($fwd) >= 0*/
 		if (isset($msg["response"]["items"][0]["fwd_messages"])) {
@@ -396,7 +381,7 @@ class UbCallbackSendMySignal implements UbCallbackAction {
 				$unpin = $vk->messagesUnPin(UbVkApi::chat2PeerId($chatId)); sleep(0.5);
 				if (isset($unpin['error'])) {
 				$msg = $vk->messagesGetByConversationMessageId(UbVkApi::chat2PeerId($chatId), $object['conversation_message_id']); sleep(0.5); /* пам'ятаємо про ліміти, бля! */
-				$mid = $msg['response']['items'][0]['id'];
+				$mid = (int)@$msg['response']['items'][0]['id'];
 				$msg = UB_ICON_WARN . ' ' . UbUtil::getVkErrorText($unpin['error']);
 				$vk->messagesEdit(UbVkApi::chat2PeerId($chatId), $mid, UB_ICON_WARN . $msg); 
 				}
