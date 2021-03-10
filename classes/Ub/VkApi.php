@@ -222,10 +222,13 @@ class UbVkApi {
 
 	function messagesEdit($peerId, $message_id, $message, $options = []) {
 		$add = '';
+		$mid = (int) $message_id;
+		if ($mid == 0)
+			return false;
 		if ($options)
 			foreach ($options as $k => $val)
 				$add .= '&' . urlencode($k) . '=' . urlencode($val);
-		$res = $this->vkRequest('messages.edit', 'random_id=' . mt_rand(0, 2000000000) . '&peer_id=' . $peerId . "&message=".urlencode($message) . "&message_id=" . $message_id . $add);
+		$res = $this->vkRequest('messages.edit', 'random_id=' . mt_rand(0, 2000000000) . '&peer_id=' . $peerId . "&message=".urlencode($message) . "&message_id=" . $mid . $add);
 		return $res;
 	}
 
