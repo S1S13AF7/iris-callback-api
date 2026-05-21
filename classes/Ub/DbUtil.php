@@ -7,7 +7,7 @@ class UbDbUtil {
 		static $db;
 		if (!$db) {
 			$db = new mysqli(DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE);
-			$db->query("SET NAMES utf8;");
+			$db->query("SET NAMES utf8mb4;");
 		}
 		return $db;
 	}
