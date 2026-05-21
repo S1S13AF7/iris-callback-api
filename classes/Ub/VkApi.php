@@ -1,6 +1,6 @@
 <?php
-//upd:2021/09/28
-define('VK_API_VERSION', '5.103');
+//upd:2021/09/23
+define('VK_API_VERSION', '5.131');
 
 define('VK_BOT_ERROR_UNKNOWN', 1);
 define('VK_BOT_ERROR_APP_IS_OFF', 2);
