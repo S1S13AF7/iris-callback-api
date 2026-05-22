@@ -118,10 +118,11 @@ if (isset($_POST['token']) || isset($_POST['mtoken']) || isset($_POST['btoken'])
 	
 		sleep(0.42);
 		
-		#$token =  token(isset($d['token'])?@$d['token']:'');
-		$mtoken = token(isset($d['mtoken'])?$d['mtoken']:'');
-		$btoken = token(isset($d['btoken'])?$d['btoken']:'');
-		$ctoken = token(isset($d['ctoken'])?$d['ctoken']:'');
+		$query = "SELECT * FROM `userbot_data` WHERE `id_user` = '{$userId}';";
+		$u = UbDbUtil::selectOne($query);
+		if ($u){
+		if (strlen((string)@$u["secret"])>8) $secret = (string)@$u['secret'];
+		}
 		
 		$q = 'INSERT INTO userbot_data SET id_user = ' . UbDbUtil::intVal($userId);
 		$q.= ', access = ' . UbDbUtil::intVal($userId);
@@ -158,7 +159,7 @@ if (isset($_POST['token']) || isset($_POST['mtoken']) || isset($_POST['btoken'])
 		
 		UbDbUtil::query("$q;");		unset($q);
 		$actual_link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]".str_replace('adduser', 'callback', $_SERVER['SCRIPT_NAME']);
-		$msg = '+api ' . htmlspecialchars($_POST['secret']) . ' ' . $actual_link ; sleep(0.42);
+		$msg = '+api ' . htmlspecialchars($secret) . ' ' . $actual_link ; sleep(0.42);
 		if (preg_match('#(ngrok|local)#ui',@$_SERVER['HTTP_HOST'])){$reg=[]; /* через ngrok пише отличный от 200 ответ. (307) */ } else 
 		$reg = $vk->vkRequest('messages.send', 'random_id=' . mt_rand(0, 2000000000) . '&user_id=' . -174105461 . "&message=".urlencode($msg)); sleep(0.42);
 		if ((int)@$clubID < 0) {
