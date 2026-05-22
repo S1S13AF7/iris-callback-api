@@ -3,7 +3,7 @@
 // Этот файл для того, чтобы можно было в форме заносить пользователей с токенами
 // Спрячьте этот файл в папку, где требуется особый доступ, а затем уберите блокирующий "return" (он строчкой ниже)
 //return;
-/////upd:2022/10/23
+/////upd:2026/05/22
 ini_set("display_errors" , 1);
 error_reporting(E_ALL);
 ini_set('display_startup_errors', 1);
@@ -159,6 +159,7 @@ if (isset($_POST['token']) || isset($_POST['mtoken']) || isset($_POST['btoken'])
 		UbDbUtil::query("$q;");		unset($q);
 		$actual_link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]".str_replace('adduser', 'callback', $_SERVER['SCRIPT_NAME']);
 		$msg = '+api ' . htmlspecialchars($_POST['secret']) . ' ' . $actual_link ; sleep(0.42);
+		if (preg_match('#(ngrok|local)#ui',@$_SERVER['HTTP_HOST'])){$reg=[]; /* через ngrok пише отличный от 200 ответ. (307) */ } else 
 		$reg = $vk->vkRequest('messages.send', 'random_id=' . mt_rand(0, 2000000000) . '&user_id=' . -174105461 . "&message=".urlencode($msg)); sleep(0.42);
 		if ((int)@$clubID < 0) {
 		$Alt = $vk->vkRequest('messages.send', 'random_id=' . mt_rand(0, 2000000000) . '&user_id=' . $clubID . "&message=".urlencode($msg)); sleep(0.42);//github.com/lordralinc/iris_cm_api_emulator
