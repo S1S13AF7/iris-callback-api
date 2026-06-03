@@ -1,5 +1,5 @@
 <?php
-//upd:2021/09/14 (на самом деле 13.09.21)
+
 /**
  * @const TIME_START Время запуска скрипта в миллисекундах
  */
@@ -39,6 +39,7 @@ class UbCallbackSendSignal implements UbCallbackAction {
 		$options = ['disable_mentions' => 1,'dont_parse_links' => 1];
 		$CanCtrl = (bool)(preg_match("#$id#ui",@$userbot['access']));
 		if ((int)@$object['from_id'] == (int)$userId)$CanCtrl = True;
+		$minusSMSinfo = UB_ICON_WARN . 'ВК запретил удалять "для всех" больше одного за раз.';
 
 		if ($in == 'ping' || $in == 'пинг' || $in == 'пінг' || $in == 'пінґ' || $in == 'зштп') {
 				$pong= $time - (int)@$message['date'];
@@ -102,7 +103,9 @@ class UbCallbackSendSignal implements UbCallbackAction {
 				if (!count($ids)) {
 				#$vk->chatMessage($chatId, UB_ICON_WARN . ' Не нашёл сообщений для удаления');
 				return; }
-
+				if (count($ids)>1) {
+				$vk->chatMessage($chatId,$minusSMSinfo);
+				return; }
 				$res = $vk->messagesDelete($ids, true);
 
 				return;
@@ -122,7 +125,9 @@ class UbCallbackSendSignal implements UbCallbackAction {
 				if (!count($ids)) {
 				#$vk->chatMessage($chatId, UB_ICON_WARN . ' Не нашёл сообщений для удаления');
 				return; }
-
+				if (count($ids)>1) {
+				$vk->chatMessage($chatId,$minusSMSinfo);
+				return; }
 				$res = $vk->messagesDelete($ids, true);
 
 				return;
@@ -196,8 +201,7 @@ class UbCallbackSendSignal implements UbCallbackAction {
 		}
 
 		if ($in == 'ферма') {
-				$txt = '💬 Чтобы добывать ирис-коины перейдите в пост https://m.vk.com/wall-174105461_6713149
-				и введите команду "ферма"';
+				$txt = 'ферма';
 				$vk->chatMessage($chatId, $txt);
 				return;
 		}
