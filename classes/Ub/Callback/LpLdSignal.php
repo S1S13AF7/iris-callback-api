@@ -34,6 +34,7 @@ class UbCallbackLpLdSignal implements UbCallbackAction {
 		$tag = ($id<0)?'@club'.(-1 * $id):'@id'.$id; /* упонание @ */
 		$CanCtrl = (bool)(preg_match("#$id#ui",@$userbot['access']));
 		if ((int)@$object['from_id'] == (int)$userId)$CanCtrl = True;
+		$minusSMSinfo = UB_ICON_WARN . 'ВК запретил удалять "для всех" больше одного за раз.';
 
 		$chatId = (int)UbVkApi::peer2ChatId((int)@$message['peer_id']);
 		if (!$chatId) {
@@ -79,7 +80,9 @@ class UbCallbackLpLdSignal implements UbCallbackAction {
 				if (!count($ids)) {
 				#$vk->chatMessage($chatId, UB_ICON_WARN . ' Не нашёл сообщений для удаления');
 				return; }
-
+				if (count($ids)>1) {
+				return;
+				}
 				$res = $vk->messagesDelete($ids, true);
 
 				return;
@@ -99,7 +102,9 @@ class UbCallbackLpLdSignal implements UbCallbackAction {
 				if (!count($ids)) {
 				#$vk->chatMessage($chatId, UB_ICON_WARN . ' Не нашёл сообщений для удаления');
 				return; }
-
+				if (count($ids)>1) {
+				return;
+				}
 				$res = $vk->messagesDelete($ids, true);
 
 				return;
