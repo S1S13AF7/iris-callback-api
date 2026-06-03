@@ -36,6 +36,13 @@ class UbCallbackDeleteMessages implements UbCallbackAction {
 			return;
 		}
 
+		if (count($ids)>1) {
+			$minusSMSinfo = UB_ICON_WARN . 'ВК запретил удалять "для всех" больше одного за раз.';
+			$vk->chatMessage($chatId, $minusSMSinfo);
+			echo 'ok';
+			return;
+		}
+
 		$res = $vk->messagesDelete($ids, true);
 
 		if (isset($res['error'])) {
