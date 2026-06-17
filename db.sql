@@ -10,10 +10,10 @@ SET time_zone = "+00:00";
 
 
 CREATE TABLE IF NOT EXISTS `userbot_bind` (
-  `id_user` int(11) NOT NULL DEFAULT 0,
+  `id_user` bigint(12) NOT NULL DEFAULT 0,
   `code` varchar(8) NOT NULL DEFAULT '',
   `id_chat` int(11) NOT NULL DEFAULT 0,
-  `id_duty` int(11) NOT NULL DEFAULT 0,
+  `id_duty` bigint(12) NOT NULL DEFAULT 0,
   `title` text NOT NULL DEFAULT '',
   PRIMARY KEY (`id_user`,`code`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
@@ -23,11 +23,11 @@ CREATE TABLE IF NOT EXISTS `userbot_bind` (
 --
 
 CREATE TABLE IF NOT EXISTS `userbot_data` (
-  `id_user` int(11) NOT NULL DEFAULT 0,
-  `token` text NOT NULL DEFAULT '',
-  `btoken` text NOT NULL DEFAULT '',
-  `ctoken` text NOT NULL DEFAULT '',
-  `mtoken` text NOT NULL DEFAULT '',
+  `id_user` bigint(12) NOT NULL DEFAULT 0,
+  `token` varchar(250) NOT NULL DEFAULT '',
+  `btoken` varchar(250) NOT NULL DEFAULT '',
+  `ctoken` varchar(250) NOT NULL DEFAULT '',
+  `mtoken` varchar(250) NOT NULL DEFAULT '',
   `bptime` int(11) UNSIGNED NOT NULL DEFAULT 0,
   `secret` varchar(100) NOT NULL DEFAULT '',
   `access` text NOT NULL DEFAULT '',
