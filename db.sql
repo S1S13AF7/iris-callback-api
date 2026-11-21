@@ -10,7 +10,7 @@ SET time_zone = "+00:00";
 
 
 CREATE TABLE IF NOT EXISTS `userbot_bind` (
-  `platform` enum('vk','tg') NOT NULL DEFAULT 'vk'
+  `platform` enum('vk','tg') NOT NULL DEFAULT 'vk',
   `id_user` bigint(20) UNSIGNED NOT NULL DEFAULT 0,
   `code` varchar(8) NOT NULL DEFAULT '',
   `date` int(11) UNSIGNED NOT NULL DEFAULT 0,
