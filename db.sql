@@ -10,13 +10,15 @@ SET time_zone = "+00:00";
 
 
 CREATE TABLE IF NOT EXISTS `userbot_bind` (
-  `id_user` bigint(12) NOT NULL DEFAULT 0,
+  `platform` enum('vk','tg') NOT NULL DEFAULT 'vk'
+  `id_user` bigint(20) UNSIGNED NOT NULL DEFAULT 0,
   `code` varchar(8) NOT NULL DEFAULT '',
-  `id_chat` int(11) NOT NULL DEFAULT 0,
-  `id_duty` bigint(12) NOT NULL DEFAULT 0,
+  `date` int(11) UNSIGNED NOT NULL DEFAULT 0,
+  `id_chat` bigint(20) UNSIGNED NOT NULL DEFAULT 0,
+  `id_duty` bigint(20) NOT NULL DEFAULT 0,
   `title` text NOT NULL DEFAULT '',
   PRIMARY KEY (`id_user`,`code`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Структура таблиці `userbot_data`
