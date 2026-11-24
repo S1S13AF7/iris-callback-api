@@ -2,9 +2,9 @@
 AddDefaultCharset utf-8
 #SetEnv TZ "Europe/Kyiv"
 
-# індексні файли
+# індексні файли та приховані розширення
 DirectoryIndex index.php index.xhtml index.html adduser.php callback.php
-IndexIgnore *.bak *.ini *.gz *.htaccess *.ico *.log *.tar *.xml HTTP*.*
+IndexIgnore *.bak *.ini *.gz *.htaccess *.ico *.log *.tar *.xml HTTP*.* *.sq* *.db *.tmp
 
 <IfModule mod_php.c>
 	#php_value date.timezone 'Europe/Kiev'
@@ -18,6 +18,17 @@ IndexIgnore *.bak *.ini *.gz *.htaccess *.ico *.log *.tar *.xml HTTP*.*
 
 # налаштування доступу та безпеки
 Options -Indexes +FollowSymLinks
+
+# за замовчуванням закриваємо все, окрім кореня теки та дозволених типів
+Require all denied
+
+<FilesMatch "(?i)^(?:|.+\.(?:php|xml|x?html?|zip|css|js|jpe?g|jfif|png|gif|webp|svg|ico|bmp|avif|tiff?|heic|heif))$">
+	Require all granted
+</FilesMatch>
+
+# заборона доступу до прихованих файлів (.htaccess, .git, .env тощо)
 <FilesMatch "^\.">
 	Require all denied
 </FilesMatch>
+
+# last upd: 24.11.2k26 15:56 [Europe/Kyiv], @S1S13AF7.
