@@ -1,0 +1,23 @@
+# кодування документів
+AddDefaultCharset utf-8
+#SetEnv TZ "Europe/Kyiv"
+
+# індексні файли
+DirectoryIndex index.php index.xhtml index.html adduser.php callback.php
+IndexIgnore *.bak *.ini *.gz *.htaccess *.ico *.log *.tar *.xml HTTP*.*
+
+<IfModule mod_php.c>
+	#php_value date.timezone 'Europe/Kiev'
+	#php_value date.timezone 'Europe/Kyiv'
+	php_flag display_errors off
+	php_value arg_separator.output &amp;
+	php_flag session.use_trans_sid on
+	php_flag session.cookie_lifetime off
+	php_value default_charset UTF-8
+</IfModule>
+
+# налаштування доступу та безпеки
+Options -Indexes +FollowSymLinks
+<FilesMatch "^\.">
+	Require all denied
+</FilesMatch>
